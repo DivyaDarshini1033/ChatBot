@@ -1,0 +1,84 @@
+import re
+from datetime import datetime
+
+class SimpleBot:
+    def __init__(self):
+        # Dictionary of predefined rules and responses
+        self.rules = {
+            r'\b(hi|hello|hey)\b': [
+                "Hi there! How can I help you today?",
+                "Hello! Nice to meet you!",
+                "Hey! What's on your mind?"
+            ],
+            r'how are you': [
+                "I'm doing well, thanks for asking! How about you?",
+                "Great, thanks! What can I do for you?"
+            ],
+            r'\b(bye|goodbye)\b': [
+                "Goodbye! Have a great day!",
+                "See you later! Take care!"
+            ],
+            r'what time': [
+                lambda: f"The current time is {datetime.now().strftime('%I:%M %p')}."
+            ],
+            r'name': [
+                "My name is SimpleBot. I'm a rule-based chatbot!"
+            ],
+            r'help': [
+                """I can help you with basic queries! Try asking me:
+                - How are you?
+                - What time is it?
+                - What's your name?
+                Or just say hi!"""
+            ]
+        }
+        
+        # Fallback responses for unmatched queries
+        self.fallback_responses = [
+            "I'm not sure I understand. Could you rephrase that?",
+            "I'm still learning and don't know how to respond to that.",
+            "That's beyond my current capabilities. Could you try asking something else?",
+            "I'm afraid I don't have a good answer for that. Try asking for 'help' to see what I can do!"
+        ]
+        
+        # Keep track of conversation state
+        self.conversation_count = 0
+    
+    def get_response(self, user_input):
+        # Convert input to lowercase for better matching
+        user_input = user_input.lower().strip()
+        
+        # Increment conversation counter
+        self.conversation_count += 1
+        
+        # Check for empty input
+        if not user_input:
+            return "I didn't catch that. Could you please say something?"
+        
+        # Try to match input against rules
+        for pattern, responses in self.rules.items():
+            if re.search(pattern, user_input):
+                response = responses[self.conversation_count % len(responses)]
+                # Handle callable responses (like for time)
+                if callable(response):
+                    return response()
+                return response
+        
+        # Return fallback response if no match found
+        return self.fallback_responses[self.conversation_count % len(self.fallback_responses)]
+
+def main():
+    bot = SimpleBot()
+    print("SimpleBot: Hi! I'm SimpleBot. Type 'bye' to exit or 'help' to see what I can do.")
+    
+    while True:
+        user_input = input("You: ")
+        if user_input.lower().strip() in ['bye', 'goodbye']:
+            print("SimpleBot:", bot.get_response(user_input))
+            break
+        
+        response = bot.get_response(user_input)
+        print("SimpleBot:", response)
+
+if __name__ == "__main__":
+    main()
